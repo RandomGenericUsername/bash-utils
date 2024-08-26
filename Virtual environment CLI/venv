@@ -1,0 +1,228 @@
+#!/bin/bash
+
+# Function to display the help message
+display_venv_help() {
+    local script_name=$(basename "$0")
+    echo "Usage: $script_name {install|uninstall|set|get|delete|list|check} [--env <environment-dir>] [<path>]"
+    echo ""
+    echo "Commands:"
+    echo "  install     - Install the environment system at the specified path."
+    echo "               Usage: $script_name install <path>"
+    echo ""
+    echo "  uninstall   - Uninstall the environment system."
+    echo "               Usage:"
+    echo "                 $script_name uninstall <path>               # Uninstall using the specified path"
+    echo "                 $script_name uninstall --env <environment-dir> # Uninstall using the specified environment directory"
+    echo "                 $script_name uninstall                      # Uninstall using the environment in the current directory"
+    echo ""
+    echo "  set         - Set a variable in the environment system."
+    echo "               Usage: $script_name set <variable_name> <value1> [value2 ...] [--env <environment-dir>]"
+    echo ""
+    echo "  get         - Get a variable from the environment system."
+    echo "               Usage: $script_name get <variable_name> [--env <environment-dir>]"
+    echo ""
+    echo "  delete      - Delete a variable from the environment system."
+    echo "               Usage: $script_name delete <variable_name> [--env <environment-dir>]"
+    echo ""
+    echo "  list        - List all variables in the environment system."
+    echo "               Usage: $script_name list [regular|array|assoc-array|detail] [--env <environment-dir>]"
+    echo ""
+    echo "  check       - Check the status of the environment system."
+    echo "               Usage:"
+    echo "                 $script_name check <path>               # Check using the specified path"
+    echo "                 $script_name check --env <environment-dir> # Check using the specified environment directory"
+    echo "                 $script_name check                      # Check using the environment in the current directory"
+    echo ""
+    echo "Options:"
+    echo "  --env, -e  Specify the environment directory that contains the config.sh file."
+    exit 1
+}
+
+
+# Function to display the help message
+# Directory from which the script was invoked
+export INVOKE_DIR="$(pwd)"
+
+# Resolve the real path of the script even if it's symlinked
+SCRIPT_PATH="$(realpath "$0")"
+export SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
+export CONFIG_TEMPLATE="$SCRIPT_DIR/src/utils/config.sh"
+
+# Utils
+source "$SCRIPT_DIR/../Print debug/print.sh"
+source "$SCRIPT_DIR/../Argument parser/arg_parser.sh"
+
+# Set the directory where the other scripts are located
+source "$SCRIPT_DIR/src/utils/config.sh"
+source "$SCRIPT_DIR/src/utils/validate_config.sh"  
+source "$SCRIPT_DIR/src/utils/get_var_from_config.sh"  
+
+source "$SCRIPT_DIR/src/commands/install.sh"
+source "$SCRIPT_DIR/src/commands/uninstall.sh"
+source "$SCRIPT_DIR/src/commands/set.sh"
+source "$SCRIPT_DIR/src/commands/get.sh"
+source "$SCRIPT_DIR/src/commands/delete.sh"
+source "$SCRIPT_DIR/src/commands/check.sh"
+source "$SCRIPT_DIR/src/commands/list.sh"
+
+# Define the arguments and their corresponding variable names
+env_path_option_identifiers=("--env" "-e")
+
+# Define the arguments and their corresponding variable names
+options=(
+    "env_path_option_identifiers" "env_path_options"
+)
+
+# Parse the argument definitions
+set_options "${options[@]}"
+
+# Parse the command line arguments
+parse_command_line "$@"
+
+# Extract the first positional argument as COMMAND
+COMMAND="${POSITIONAL_ARGS[0]}"
+
+# Extract the remaining positional arguments as ARGS array
+ARGS=("${POSITIONAL_ARGS[@]:1}")
+
+# Get the value of the arguments
+ENV_PATH=$(get_arg_value "env_path_options")
+export ENV_CONFIG_FILE="$ENV_PATH/env.conf"
+
+# Check if a command was provided and if it is a valid command
+if [ -z "$COMMAND" ] || [[ ! "$COMMAND" =~ ^(install|uninstall|set|get|list|delete|check)$ ]]; then
+    print "Error: Invalid or no command provided => $COMMAND" -t "error" 
+    display_venv_help
+    exit 1
+fi
+
+# Default path for the config file (in the current directory)
+if [[ -z "$ENV_PATH" ]]; then
+    print "No path to an environment was specified. Searching in current directory: $INVOKE_DIR" -t "debug"
+    [[ -f "$INVOKE_DIR/config.sh" ]] && ENV_PATH="$INVOKE_DIR"
+fi
+
+# For all commands except install and uninstall, check if the config file is required
+if [[ "$COMMAND" != "install" && "$COMMAND" != "uninstall" && "$COMMAND" != "check" ]]; then
+    validate_config "$ENV_PATH"
+    source "$ENV_CONFIG_FILE"
+    export ENV_PATH 
+fi
+
+print "Command: $COMMAND" -t "debug"
+print "Arguments: ${ARGS[*]}" -t "debug"
+print "Environment path: $CONFIG_FILE" -t "debug"
+
+
+# Execute the appropriate command
+case "$COMMAND" in
+    install)
+        install "${ARGS[@]}"
+        ;;
+    uninstall)
+        uninstall "${ARGS[@]}"
+        ;;
+    set)
+        set "${ARGS[@]}"
+        ;;
+    get)
+        get "${ARGS[@]}"
+        ;;
+    check)
+        check "${ARGS[@]}"
+        ;;
+    delete)
+        delete "${ARGS[@]}"
+        ;;
+    list)
+        list "${ARGS[@]}"
+        ;;
+    *)
+        display_venv__help
+        ;;
+esac
+
+
+## Usage
+
+##!/bin/bash
+#
+#SCRIPT_DIR="$(dirname "$0")"
+#source "$SCRIPT_DIR/utils/arg_parser.sh"
+#
+## Define the arguments and their corresponding variable names
+#command_option=("--command" "-c")
+#file_option=("--file" "-f")
+#verbose_option=("--verbose" "-v")
+#
+## Define the arguments and their corresponding variable names
+#args=(
+#    "command_option" "COMMAND"
+#    "file_option" "FILES"
+#    "verbose_option" "VERBOSE"
+#)
+#
+## Parse the argument definitions
+#parse_args "${args[@]}"
+## Enable multi-value for specific options
+#enable_multi_value "--command" "-c"
+#enable_multi_value "--file" "-f"
+## Enable flags (options without values)
+#enable_flag "--verbose" "-v"
+#
+## Parse the command line arguments
+#parse_command_line "$@"
+#
+## Get the value of the arguments
+#cmd=$(get_arg_value "COMMAND")
+#files=$(get_arg_value "FILES")
+#verbose=$(get_arg_value "VERBOSE")
+#
+#
+## Output the values
+#echo "Positional Arguments: ${POSITIONAL_ARGS[@]}"
+#echo "Command: ${cmd[@]}"
+#echo "Files: ${files[@]}"
+#echo "Verbose: ${verbose}"
+#
+#if [[ $verbose == true ]]; then
+#    echo "Verbose mode is enabled"
+#else
+#    echo "Verbose is disabled"
+#fi
+
+
+## Positional Arguments: install-packages fictitious-package-1 fictitious-package-2 fictitious-package-3
+#
+##!/bin/bash
+#
+#SCRIPT_DIR="$(dirname "$0")"
+#source "$SCRIPT_DIR/utils/arg_parser.sh"
+#
+## Define the arguments and their corresponding variable names
+#config_path_option=("--config" "-c")
+#
+## Define the arguments and their corresponding variable names
+#args=(
+#    "config_path_option" "config_path"
+#)
+#
+## Parse the argument definitions
+#parse_args "${args[@]}"
+#
+## Parse the command line arguments
+#parse_command_line "$@"
+#
+## Extract the first positional argument as COMMAND
+#COMMAND="${POSITIONAL_ARGS[0]}"
+#
+## Extract the remaining positional arguments as ARGS array
+#ARGS=("${POSITIONAL_ARGS[@]:1}")
+#
+## Get the value of the arguments
+#CONFIG_PATH=$(get_arg_value "config_path")
+#
+## Output the values
+#echo "Command: $COMMAND"
+#echo "Arguments: ${ARGS[@]}"
+#echo "Config path: $CONFIG_PATH"

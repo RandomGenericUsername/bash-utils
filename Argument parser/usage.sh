@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Enable debug.
-#export DEBUG=true
+#export ENABLE_DEBUG=true
 
 # Source the utility
 SCRIPT_DIR="$(dirname "$0")"
