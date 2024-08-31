@@ -3,8 +3,9 @@
 # Function to log messages
 log_message() {
     local log_line="$1"
-    if [[ "$ENABLE_LOG" == "true" ]] && [[ -f "$LOG_PATH" ]]; then
-        echo "$log_line" >> "$LOG_PATH"
+    local force_log="$2"
+    if [[ "$force_log" == "true" ]] || [[ "$ENABLE_LOG" == "true" ]] && [[ -f "$LOG" ]]; then
+        echo "$log_line" >> "$LOG"
         if [[ $? -eq 0 ]]; then
             return 0  # Success
         else
@@ -37,13 +38,14 @@ print_debug() {
     local type="debug"
     local upper="false"
     local double_line="false"
+    local log="false"
     
     shift
     # Parse arguments
     while [[ "$#" -gt 0 ]]; do
         case $1 in
             --type|-t) type="$2"; shift ;;
-            --log|-l) log_path="$2"; shift ;;
+            --log|-l) log="true" ;;
             --upper|-u) upper="$2"; shift ;;
             --double-line|-d) double_line="true" ;;
             *) echo "Unknown parameter passed: $1" >&2; return 1 ;;
@@ -76,7 +78,7 @@ print_debug() {
     print_with_color "$formatted_message" "$type" >&2
     
     # Log the message if logging is enabled and path is valid
-    log_message "$formatted_message"
+    log_message "$formatted_message" "$log"
     
     # Print an additional empty line if double_line is true
     if [ "$double_line" == "true" ]; then
