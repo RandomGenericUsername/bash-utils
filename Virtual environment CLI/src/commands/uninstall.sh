@@ -19,7 +19,7 @@ help_uninstall() {
 uninstall() {
 
     if [[ -z "$1" ]] && [[ -z "$ENV_PATH" ]];then
-        print "No installation or environment path provided..." -t "error"
+        print_debug "No installation or environment path provided..." -t "error"
         exit 1
     fi
 
@@ -30,6 +30,6 @@ uninstall() {
     fi
     validate_config "$install_path"
     rm -rf "$install_path"
-    print "Environment uninstalled successfully from $install_path." -t "info"
+    print_debug "Environment uninstalled successfully from $install_path." -t "info"
     exit 0
 }

@@ -27,7 +27,7 @@ list_all_with_details() {
     variable_lines=$(grep '^__VAR__TYPE__' "$ENV_CONFIG_FILE")
 
     if [[ -z "$variable_lines" ]]; then
-        print "No variables found." -t "info"
+        print_debug "No variables found." -t "info"
     else
         echo "$variable_lines" | while IFS='=' read -r var_type; do
             var_name=$(echo "$var_type" | sed 's/^__VAR__TYPE__//' | cut -d '=' -f 1)
@@ -58,7 +58,7 @@ list() {
             if [[ -f "$REGULAR_VARIABLES" ]]; then
                 cut -d '=' -f 1 "$REGULAR_VARIABLES" | sort
             else
-                print "No regular variables found." -t "debug"
+                print_debug "No regular variables found." -t "debug"
             fi
             ;;
         array)
@@ -66,7 +66,7 @@ list() {
             if [[ -f "$ARRAY_VARIABLES" ]]; then
                 cut -d '=' -f 1 "$ARRAY_VARIABLES" | sort
             else
-                print "No array variables found." -t "debug"
+                print_debug "No array variables found." -t "debug"
             fi
             ;;
         assoc-array)
@@ -74,7 +74,7 @@ list() {
             if [[ -f "$ASSOCIATIVE_ARRAY_VARIABLES" ]]; then
                 cut -d '[' -f 1 "$ASSOCIATIVE_ARRAY_VARIABLES" | uniq | sort
             else
-                print "No associative array variables found." -t "debug"
+                print_debug "No associative array variables found." -t "debug"
             fi
             ;;
         detail)

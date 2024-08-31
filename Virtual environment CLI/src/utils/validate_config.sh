@@ -3,12 +3,12 @@ validate_config() {
     local config_file="$1/env.conf"
 
     if [[ -z "$env_path" ]];then
-        print "No path to an environment was specified..." -t "error"
+        print_debug "No path to an environment was specified..." -t "error"
         exit 1
     fi
 
     if [[ ! -f "$config_file" ]];then
-        print "No config file found at $env_path..." -t "info"
+        print_debug "No config file found at $env_path..." -t "info"
         exit 1
     fi
 
@@ -21,10 +21,10 @@ validate_config() {
     # Check if all template variables are defined in the config file
     for var in ENV_PATH REGULAR_VARIABLES ARRAY_VARIABLES ASSOCIATIVE_ARRAY_VARIABLES; do
         if [ -z "${!var}" ]; then
-            print "Error: The configuration file is missing the variable $var thus is not valid..." -t "error"
+            print_debug "Error: The configuration file is missing the variable $var thus is not valid..." -t "error"
             exit 1
         fi
     done
-    print "Valid config file found at $env_path" -t "debug"
+    print_debug "Valid config file found at $env_path" -t "debug"
     return 0
 }

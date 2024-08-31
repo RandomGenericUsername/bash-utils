@@ -15,7 +15,7 @@ delete_regular_var() {
         sed -i "/^${var_name}=/d" "$REGULAR_VARIABLES"
         return 0
     else
-        print "Regular variable $var_name does not exist." -t "debug"
+        print_debug "Regular variable $var_name does not exist." -t "debug"
         return 1
     fi
 }
@@ -27,7 +27,7 @@ delete_array_var() {
         sed -i "/^${var_name}=/d" "$ARRAY_VARIABLES"
         return 0
     else
-        print "Array variable $var_name does not exist." -t "debug"
+        print_debug "Array variable $var_name does not exist." -t "debug"
         return 1
     fi
 }
@@ -39,7 +39,7 @@ delete_associative_array_var() {
         sed -i "/^${var_name}\[/d" "$ASSOCIATIVE_ARRAY_VARIABLES"
         return 0
     else
-        print "Associative array variable $var_name does not exist." -t "debug"
+        print_debug "Associative array variable $var_name does not exist." -t "debug"
         return 1
     fi
 }
@@ -53,7 +53,7 @@ delete() {
     var_type=$(get_variable_type "$var_name")
 
     if [[ -z "$var_type" ]]; then
-        print "Variable type not found for \"$var_name\". It was probably deleted already!" -t "error"
+        print_debug "Variable type not found for \"$var_name\". It was probably deleted already!" -t "error"
         return 1
     fi
 

@@ -2,7 +2,7 @@
 
 __SCRIPT_PATH="$(realpath "$0")"
 __SCRIPT_DIR="$(dirname "$__SCRIPT_PATH")"
-source "$__SCRIPT_DIR/../Print debug/print.sh"
+source "$__SCRIPT_DIR/../Print debug/print-debug"
 
 declare -A ARG_VALUES
 declare -A ARG_MULTI_VALUES
@@ -16,12 +16,12 @@ set_options() {
         local var_name="$2"
         shift 2
 
-        print "Parsing options for array: $array_name, Variable: $var_name" -t "debug"
+        print_debug "Parsing options for array: $array_name, Variable: $var_name" -t "debug"
 
         eval "local -a options=(\"\${${array_name}[@]}\")"
 
         for opt in "${options[@]}"; do
-            print "Mapping option $opt to variable $var_name" -t "debug"
+            print_debug "Mapping option $opt to variable $var_name" -t "debug"
             ARG_VALUES["$opt"]="$var_name"
             ARG_MULTI_VALUES["$opt"]=false
         done
@@ -37,7 +37,7 @@ enable_multi_value_option() {
         if [[ -n "${ARG_VALUES[$option]}" ]]; then
             ARG_MULTI_VALUES["$option"]=true
         else
-            print "Error: $option is not a recognized option" -t "error"
+            print_debug "Error: $option is not a recognized option" -t "error"
             exit 1
         fi
     done
@@ -52,7 +52,7 @@ enable_flag() {
         if [[ -n "${ARG_VALUES[$option]}" ]]; then
             ARG_FLAGS["$option"]=true
         else
-            print "Error: $option is not a recognized option" -t "error"
+            print_debug "Error: $option is not a recognized option" -t "error"
             exit 1
         fi
     done
@@ -60,7 +60,7 @@ enable_flag() {
 
 get_arg_value() {
     local var_name=$1
-    print "Getting value of $var_name" -t "debug"
+    print_debug "Getting value of $var_name" -t "debug"
     if [[ "$(declare -p $var_name 2>/dev/null)" =~ "declare -a" ]]; then
         eval "echo \${$var_name[@]}"
     else
@@ -76,7 +76,7 @@ set_mandatory_arguments() {
     # Set the number of mandatory arguments
     export MANDATORY_ARGUMENTS="$num_args"
 
-    print "Setting $num_args mandatory arguments" -t "debug"
+    print_debug "Setting $num_args mandatory arguments" -t "debug"
 
     # Loop through the arguments to parse pairs (coordinate and values)
     while [[ "$#" -gt 0 ]]; do
@@ -90,7 +90,7 @@ set_mandatory_arguments() {
             exit 1
         fi
 
-        print "Setting allowed values for position $coord: $values" -t "debug"
+        print_debug "Setting allowed values for position $coord: $values" -t "debug"
 
         # Store the allowed values for this coordinate as a space-separated string
         MANDATORY_ARGUMENTS_VALUES["$coord"]="$values"
@@ -103,12 +103,12 @@ validate_positional_argument() {
     local position="$2"
     local allowed_values="${MANDATORY_ARGUMENTS_VALUES[$position]}"
 
-    print "Validating argument '$arg' for position $position against allowed values: $allowed_values" -t "debug"
+    print_debug "Validating argument '$arg' for position $position against allowed values: $allowed_values" -t "debug"
 
     if [[ -n "$allowed_values" ]]; then
         local found=false
         for value in $allowed_values; do
-            print "Checking if '$arg' matches '$value'" -t "debug"
+            print_debug "Checking if '$arg' matches '$value'" -t "debug"
             if [[ "$arg" == "$value" ]]; then
                 found=true
                 break
@@ -116,8 +116,8 @@ validate_positional_argument() {
         done
 
         if [[ "$found" == false ]]; then
-            print "Error: Argument '$arg' is not allowed for position $position." -t "error"
-            print "Allowed values for position $position: $allowed_values" -t "debug"
+            print_debug "Error: Argument '$arg' is not allowed for position $position." -t "error"
+            print_debug "Allowed values for position $position: $allowed_values" -t "debug"
             exit 1
         fi
     fi
@@ -127,7 +127,7 @@ validate_positional_argument() {
 add_positional_argument() {
     local arg="$1"
     positional_args+=("$arg")
-    print "Adding $arg to positional arguments" -t "debug"
+    print_debug "Adding $arg to positional arguments" -t "debug"
 }
 
 # Function to validate all positional arguments
@@ -140,7 +140,7 @@ validate_all_positional_arguments() {
 # Function to parse command line arguments
 parse_command_line() {
     local positional_args=()
-    print "Parsing command line arguments..." -t "debug"
+    print_debug "Parsing command line arguments..." -t "debug"
 
     # Initialize all flags
     for flag in "${!ARG_FLAGS[@]}"; do
@@ -164,7 +164,7 @@ parse_command_line() {
                     eval "${ARG_VALUES[$key]}=\"$1\""
                     shift
                 else
-                    print "Error: $key requires a non-empty argument." -t "error"
+                    print_debug "Error: $key requires a non-empty argument." -t "error"
                     exit 1
                 fi
             fi
@@ -175,11 +175,11 @@ parse_command_line() {
     done
 
     export POSITIONAL_ARGS=("${positional_args[@]}")
-    print "Positional arguments captured: ${POSITIONAL_ARGS[*]}" -t "debug"
+    print_debug "Positional arguments captured: ${POSITIONAL_ARGS[*]}" -t "debug"
 
     if [[ "${MANDATORY_ARGUMENTS:-0}" -gt 0 ]]; then
         if [[ ${#POSITIONAL_ARGS[@]} -lt $MANDATORY_ARGUMENTS ]]; then
-            print "Error: At least $MANDATORY_ARGUMENTS positional argument(s) required, but only ${#POSITIONAL_ARGS[@]} provided => { ${POSITIONAL_ARGS[*]} }" -t "error"
+            print_debug "Error: At least $MANDATORY_ARGUMENTS positional argument(s) required, but only ${#POSITIONAL_ARGS[@]} provided => { ${POSITIONAL_ARGS[*]} }" -t "error"
             exit 1
         fi
 

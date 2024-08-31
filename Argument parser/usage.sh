@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Enable debug.
-#export ENABLE_DEBUG=true
+export ENABLE_DEBUG=true
 
 # Source the utility
 SCRIPT_DIR="$(dirname "$0")"
-source "$SCRIPT_DIR/arg_parser.sh"
+source "$SCRIPT_DIR/argument-parser"
 
 # Define the identifiers for each option/flag
 log_files_option_identifiers=("-l" "--logs" "--log-files")
@@ -75,8 +75,6 @@ echo ""
 # Output the flags 
 echo "JSON Output: ${JSON_OUTPUT}"
 echo ""
-
-
 
 # Flags get the value 'true' if they are passed, else 'false'
 if [[ $JSON_OUTPUT == true ]]; then

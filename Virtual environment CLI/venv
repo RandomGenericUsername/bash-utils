@@ -49,8 +49,8 @@ export SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 export CONFIG_TEMPLATE="$SCRIPT_DIR/src/utils/config.sh"
 
 # Utils
-source "$SCRIPT_DIR/../Print debug/print.sh"
-source "$SCRIPT_DIR/../Argument parser/arg_parser.sh"
+source "$SCRIPT_DIR/../Print debug/print-debug"
+source "$SCRIPT_DIR/../Argument parser/argument-parser"
 
 # Set the directory where the other scripts are located
 source "$SCRIPT_DIR/src/utils/config.sh"
@@ -91,14 +91,14 @@ export ENV_CONFIG_FILE="$ENV_PATH/env.conf"
 
 # Check if a command was provided and if it is a valid command
 if [ -z "$COMMAND" ] || [[ ! "$COMMAND" =~ ^(install|uninstall|set|get|list|delete|check)$ ]]; then
-    print "Error: Invalid or no command provided => $COMMAND" -t "error" 
+    print_debug "Error: Invalid or no command provided => $COMMAND" -t "error" 
     display_venv_help
     exit 1
 fi
 
 # Default path for the config file (in the current directory)
 if [[ -z "$ENV_PATH" ]]; then
-    print "No path to an environment was specified. Searching in current directory: $INVOKE_DIR" -t "debug"
+    print_debug "No path to an environment was specified. Searching in current directory: $INVOKE_DIR" -t "debug"
     [[ -f "$INVOKE_DIR/config.sh" ]] && ENV_PATH="$INVOKE_DIR"
 fi
 
@@ -109,9 +109,9 @@ if [[ "$COMMAND" != "install" && "$COMMAND" != "uninstall" && "$COMMAND" != "che
     export ENV_PATH 
 fi
 
-print "Command: $COMMAND" -t "debug"
-print "Arguments: ${ARGS[*]}" -t "debug"
-print "Environment path: $CONFIG_FILE" -t "debug"
+print_debug "Command: $COMMAND" -t "debug"
+print_debug "Arguments: ${ARGS[*]}" -t "debug"
+print_debug "Environment path: $CONFIG_FILE" -t "debug"
 
 
 # Execute the appropriate command

@@ -4,7 +4,7 @@
 
 check(){
     if [[ -z "$1" ]] && [[ -z "$ENV_PATH" ]];then
-        print "No installation or environment path provided..." -t "error"
+        print_debug "No installation or environment path provided..." -t "error"
         exit 1
     fi
 
@@ -14,6 +14,6 @@ check(){
         install_path=$(get_var_from_config "ENV_PATH")
     fi
     validate_config "$install_path"
-    print "Valid venv installation at: $install_path" -t "info"
+    print_debug "Valid venv installation at: $install_path" -t "info"
     exit 0
 }
