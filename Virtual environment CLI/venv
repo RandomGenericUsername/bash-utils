@@ -44,14 +44,14 @@ display_venv_help() {
 export INVOKE_DIR="$(pwd)"
 
 # Resolve the real path of the script even if it's symlinked
-#SCRIPT_PATH="$(realpath "$0")"
-#export SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
-export SCRIPT_DIR;SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+SCRIPT_PATH="$(realpath "$0")"
+export SCRIPT_DIR;SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
+export __SCRIPT_DIR;__SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 export CONFIG_TEMPLATE="$SCRIPT_DIR/src/utils/config.sh"
 
 # Utils
-source "$SCRIPT_DIR/../Print debug/print-debug"
-source "$SCRIPT_DIR/../Argument parser/argument-parser"
+source "$_SCRIPT_DIR/../Print debug/print-debug"
+source "$_SCRIPT_DIR/../Argument parser/argument-parser"
 
 # Set the directory where the other scripts are located
 source "$SCRIPT_DIR/src/utils/config.sh"
