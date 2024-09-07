@@ -1,7 +1,6 @@
 #!/bin/bash
 
-__SCRIPT_PATH="$(realpath "$0")"
-__SCRIPT_DIR="$(dirname "$__SCRIPT_PATH")"
+__SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$__SCRIPT_DIR/../Print debug/print-debug"
 
 declare -A ARG_VALUES
