@@ -3,7 +3,7 @@
 # Function to display the help message
 display_venv_help() {
     local script_name=$(basename "$0")
-    echo "Usage: $script_name {install|uninstall|set|get|delete|list|check} [--env <environment-dir>] [<path>]"
+    echo "Usage: $script_name {install|uninstall|set|get|delete|list|check|update} [--env <environment-dir>] [<path>]"
     echo ""
     echo "Commands:"
     echo "  install     - Install the environment system at the specified path."
@@ -16,6 +16,9 @@ display_venv_help() {
     echo "                 $script_name uninstall                      # Uninstall using the environment in the current directory"
     echo ""
     echo "  set         - Set a variable in the environment system."
+    echo "               Usage: $script_name set <variable_name> <value1> [value2 ...] [--env <environment-dir>]"
+    echo ""
+    echo "  update       - Updates a variable in the environment system."
     echo "               Usage: $script_name set <variable_name> <value1> [value2 ...] [--env <environment-dir>]"
     echo ""
     echo "  get         - Get a variable from the environment system."
@@ -60,6 +63,7 @@ source "$SCRIPT_DIR/src/utils/get_var_from_config.sh"
 source "$SCRIPT_DIR/src/commands/install.sh"
 source "$SCRIPT_DIR/src/commands/uninstall.sh"
 source "$SCRIPT_DIR/src/commands/set.sh"
+source "$SCRIPT_DIR/src/commands/update.sh"
 source "$SCRIPT_DIR/src/commands/get.sh"
 source "$SCRIPT_DIR/src/commands/delete.sh"
 source "$SCRIPT_DIR/src/commands/check.sh"
@@ -90,7 +94,7 @@ ENV_PATH=$(get_arg_value "env_path_options")
 export ENV_CONFIG_FILE="$ENV_PATH/env.conf"
 
 # Check if a command was provided and if it is a valid command
-if [ -z "$COMMAND" ] || [[ ! "$COMMAND" =~ ^(install|uninstall|set|get|list|delete|check)$ ]]; then
+if [ -z "$COMMAND" ] || [[ ! "$COMMAND" =~ ^(install|uninstall|set|get|list|delete|check|update)$ ]]; then
     print_debug "Error: Invalid or no command provided => $COMMAND" -t "error" 
     display_venv_help
     exit 1
@@ -124,6 +128,9 @@ case "$COMMAND" in
         ;;
     set)
         set "${ARGS[@]}"
+        ;;
+    update)
+        update "${ARGS[@]}"
         ;;
     get)
         get "${ARGS[@]}"
