@@ -4,6 +4,7 @@ help_update() {
     echo "Usage: env.sh update <variable_name> <new_value1> [new_value2 ...] [--config <config-file>]"
     echo ""
     echo "Updates the value of a variable. For regular variables, it works as a set command. For arrays and associative arrays, it appends new values."
+    echo "If the variable doesn't exist yet, it calls the corresponding set function."
     echo ""
     echo "Examples:"
     echo "  env.sh update cached_wallpapers 'New Wallpaper' 'Another Wallpaper'"
@@ -12,15 +13,16 @@ help_update() {
     exit 1
 }
 
+# Source the existing set.sh module (where set_* functions are defined)
+source "$SCRIPT_DIR/src/commands/set.sh"
+
 # Function to update a regular variable
 update_regular_var() {
     local var_name="$1"
     local new_value="$2"
 
-    if grep -q "^${var_name}=" "$REGULAR_VARIABLES"; then
-        sed -i "/^${var_name}=/d" "$REGULAR_VARIABLES"
-    fi
-
+    # Update the existing variable
+    sed -i "/^${var_name}=/d" "$REGULAR_VARIABLES"
     echo "$var_name=$new_value" >> "$REGULAR_VARIABLES"
     return 0
 }
@@ -31,25 +33,20 @@ update_array_var() {
     shift
     local new_values=("$@")
 
-    # Retrieve existing array
+    # Retrieve existing array and append new values
     local existing_values
-    if grep -q "^${var_name}=" "$ARRAY_VARIABLES"; then
-        existing_values=$(grep "^${var_name}=" "$ARRAY_VARIABLES" | cut -d'=' -f2-)
-        existing_values="${existing_values:1:-1}"  # Remove parentheses
-    else
-        existing_values=""  # No existing array
-    fi
+    existing_values=$(grep "^${var_name}=" "$ARRAY_VARIABLES" | cut -d'=' -f2-)
+    existing_values="${existing_values:1:-1}"  # Remove parentheses
 
-    # Combine existing values and new values
+    # Combine existing and new values
     local updated_values="$existing_values"
     for val in "${new_values[@]}"; do
         updated_values+=" \"$val\""
     done
 
     # Write back the updated array
-    sed -i "/^${var_name}=/d" "$ARRAY_VARIABLES"  # Remove the old array
+    sed -i "/^${var_name}=/d" "$ARRAY_VARIABLES"
     echo "$var_name=($updated_values)" >> "$ARRAY_VARIABLES"
-    
     return 0
 }
 
@@ -58,17 +55,13 @@ update_associative_array_var() {
     local var_name="$1"
     shift
     declare -A assoc_array
-    local return_code=0
 
     # Retrieve existing associative array
-    if grep -q "^${var_name}\[" "$ASSOCIATIVE_ARRAY_VARIABLES"; then
-        # Load existing key-value pairs into assoc_array
-        while IFS='=' read -r key value; do
-            key=$(echo "$key" | sed -e "s/^${var_name}\[\"//" -e 's/\"\]$//')
-            value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//')
-            assoc_array["$key"]="$value"
-        done < <(grep "^${var_name}\[" "$ASSOCIATIVE_ARRAY_VARIABLES")
-    fi
+    while IFS='=' read -r key_line value; do
+        key_line=$(echo "$key_line" | sed -e "s/^${var_name}\[\"//" -e 's/\"\]$//')
+        value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//')
+        assoc_array["$key_line"]="$value"
+    done < <(grep "^${var_name}\[" "$ASSOCIATIVE_ARRAY_VARIABLES")
 
     # Add new key-value pairs
     local key_value_regex='^\"?([^\":]+)\"?\s*:\s*\"?([^\":]+)\"?$'
@@ -85,12 +78,12 @@ update_associative_array_var() {
     done
 
     # Write back the updated associative array
-    sed -i "/^${var_name}\[/d" "$ASSOCIATIVE_ARRAY_VARIABLES"  # Remove the old entries
+    sed -i "/^${var_name}\[/d" "$ASSOCIATIVE_ARRAY_VARIABLES"
     for key in "${!assoc_array[@]}"; do
         echo "${var_name}[\"$key\"]=\"${assoc_array[$key]}\"" >> "$ASSOCIATIVE_ARRAY_VARIABLES"
     done
 
-    return $return_code
+    return 0
 }
 
 # Main update function
@@ -103,10 +96,24 @@ update() {
     local var_name="$1"
     shift
 
-    # Check the variable type
+    # Check if the variable exists by determining its type
     local var_type
     var_type=$(get_variable_type "$var_name")
 
+    # If the variable doesn't exist, call the corresponding set function
+    if [[ -z "$var_type" ]]; then
+        #echo "Variable does not exist, calling set function."
+        if [[ "$*" =~ ":" ]]; then
+            set_associative_array_var "$var_name" "$@"
+        elif [[ "$#" -gt 1 ]]; then
+            set_array_var "$var_name" "$@"
+        else
+            set_regular_var "$var_name" "$1"
+        fi
+        return 0
+    fi
+
+    # Handle updates for existing variables
     if [[ "$var_type" == "regular" ]]; then
         update_regular_var "$var_name" "$1"
     elif [[ "$var_type" == "array" ]]; then
