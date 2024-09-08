@@ -93,33 +93,44 @@ update() {
         exit 1
     fi
 
-    local var_name="$1"
-    shift
+    var_type_options_identifier=("--vt" "--variable-type")
+    options=("var_type_options_identifier" "var_type_options")
+    set_options "${options[@]}"
+    parse_command_line "$@"
+    
+    local var_name="${POSITIONAL_ARGS[0]}"
+    local args=("${POSITIONAL_ARGS[@]:1}")
+    local variable_type="$(get_arg_value "var_type_options")"
 
     # Check if the variable exists by determining its type
     local var_type
     var_type=$(get_variable_type "$var_name")
 
-    # If the variable doesn't exist, call the corresponding set function
+    # If the variable doesn't exist and --vt is provided, initialize with the given type
     if [[ -z "$var_type" ]]; then
-        #echo "Variable does not exist, calling set function."
-        if [[ "$*" =~ ":" ]]; then
-            set_associative_array_var "$var_name" "$@"
-        elif [[ "$#" -gt 1 ]]; then
-            set_array_var "$var_name" "$@"
+        if [[ -n "$variable_type" ]]; then
+            echo "Variable does not exist, initializing as '$variable_type'."
+            if [[ "$variable_type" == "array" ]]; then
+                set_array_var "$var_name" "${args[@]}"
+            elif [[ "$variable_type" == "associative_array" ]]; then
+                set_associative_array_var "$var_name" "${args[@]}"
+            else
+                set_regular_var "$var_name" "${args[0]}"
+            fi
         else
-            set_regular_var "$var_name" "$1"
+            # No --vt flag provided, fall back to default behavior (treat as regular)
+            set_regular_var "$var_name" "${args[0]}"
         fi
         return 0
     fi
 
     # Handle updates for existing variables
     if [[ "$var_type" == "regular" ]]; then
-        update_regular_var "$var_name" "$1"
+        update_regular_var "$var_name" "${args[0]}"
     elif [[ "$var_type" == "array" ]]; then
-        update_array_var "$var_name" "$@"
+        update_array_var "$var_name" "${args[@]}"
     elif [[ "$var_type" == "associative_array" ]]; then
-        update_associative_array_var "$var_name" "$@"
+        update_associative_array_var "$var_name" "${args[@]}"
     else
         echo "Error: Unsupported variable type for update."
         return 1
